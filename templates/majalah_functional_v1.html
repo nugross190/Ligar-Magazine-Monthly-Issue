@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Majalah Sekolah — Template Isi Sendiri</title>
+<!--
+  Sumber: dikembangkan dari prototypes/majalah_prototype_v2_profile_guru.html (mockup visual).
+  Ronde ini (v1 fungsional) menambahkan: unggah foto sungguhan (kompresi otomatis + peringatan
+  resolusi rendah), teks yang bisa diklik-dan-ubah langsung (dengan batas karakter), dan
+  penempelan video YouTube. Lihat templates/_shared/README.md untuk pola yang dipakai ulang
+  di template berikutnya.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #EEF0EC;
+    --paper-alt: #E3E7DE;
+    --ink: #14171F;
+    --ink-soft: #4B5563;
+    --blue: #2451FF;
+    --amber: #FFB100;
+    --line: #B8C4BE;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'IBM Plex Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --radius: 2px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.5;
+    position: relative;
+  }
+
+  /* subtle graph-paper texture, low opacity, fixed */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(20,23,31,0.035) 0 1px, transparent 1px 32px),
+      repeating-linear-gradient(90deg, rgba(20,23,31,0.035) 0 1px, transparent 1px 32px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  section { position: relative; z-index: 1; }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 600; }
+
+  /* ---------- Progress gauge ---------- */
+  .gauge {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    width: 0%;
+    background: var(--blue);
+    z-index: 50;
+    transition: width 0.1s linear;
+  }
+
+  /* ---------- Floating nav ---------- */
+  .nav-toggle {
+    position: fixed;
+    bottom: 1.75rem;
+    right: 1.75rem;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    box-shadow: 0 6px 20px rgba(20,23,31,0.25);
+  }
+  .nav-toggle svg { width: 22px; height: 22px; }
+
+  .nav-panel {
+    position: fixed;
+    bottom: 5.5rem;
+    right: 1.75rem;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.5rem;
+    min-width: 220px;
+    z-index: 99;
+    box-shadow: 0 10px 30px rgba(20,23,31,0.2);
+    transform: translateY(8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+  .nav-panel.is-open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+  .nav-panel a {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    padding: 0.55rem 0.6rem;
+    text-decoration: none;
+    color: var(--ink);
+    font-size: 0.9rem;
+    border-radius: var(--radius);
+  }
+  .nav-panel a .tick {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+    width: 1.6rem;
+  }
+  .nav-panel a:hover { background: var(--paper-alt); }
+  .nav-panel a.is-active { background: var(--ink); color: var(--paper); }
+  .nav-panel a.is-active .tick { color: var(--amber); }
+
+  /* ---------- Info / "Cara Pakai" panel ---------- */
+  .info-toggle {
+    position: fixed;
+    bottom: 1.75rem;
+    left: 1.75rem;
+    width: 2.85rem;
+    height: 2.85rem;
+    border-radius: 50%;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.15rem;
+    cursor: pointer;
+    z-index: 100;
+    box-shadow: 0 6px 20px rgba(20,23,31,0.25);
+  }
+  .info-panel {
+    position: fixed;
+    bottom: 5.2rem;
+    left: 1.75rem;
+    max-width: 260px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.9rem 1rem;
+    z-index: 99;
+    box-shadow: 0 10px 30px rgba(20,23,31,0.2);
+    transform: translateY(8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    font-size: 0.82rem;
+  }
+  .info-panel.is-open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .info-panel strong { font-family: var(--font-display); display: block; margin-bottom: 0.5rem; font-size: 0.9rem; }
+  .info-panel ol { padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.4rem; color: var(--ink-soft); }
+
+  /* ---------- Reveal animation ---------- */
+  .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.5s ease, transform 0.5s ease; }
+  .reveal.is-visible { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .reveal { opacity: 1; transform: none; transition: none; }
+  }
+
+  /* ---------- Slots (upload targets) ---------- */
+  .slot {
+    border: 1.5px dashed var(--line);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: var(--ink-soft);
+    text-align: center;
+    background: rgba(255,255,255,0.4);
+    position: relative;
+    cursor: pointer;
+  }
+  .slot svg { width: 28px; height: 28px; opacity: 0.7; }
+  .slot span { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.03em; }
+
+  .slot.has-image {
+    border-style: solid;
+    background-size: cover;
+    background-position: center;
+  }
+  .slot.has-image > svg,
+  .slot.has-image > span:not(.low-res-badge) { display: none; }
+  .slot.has-image::before {
+    content: 'Ganti Foto';
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(20,23,31,0.55); color: #fff;
+    font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.04em;
+    opacity: 0; transition: opacity 0.15s ease;
+    z-index: 3;
+  }
+  .slot.has-image:hover::before,
+  .slot.has-image:focus-visible::before { opacity: 1; }
+
+  .low-res-badge {
+    position: absolute; top: 0.5rem; right: 0.5rem;
+    background: var(--amber); color: var(--ink);
+    font-family: var(--font-mono); font-size: 0.6rem;
+    padding: 0.2rem 0.45rem; border-radius: var(--radius);
+    letter-spacing: 0.03em; z-index: 4;
+  }
+
+  /* ---------- Editable text ---------- */
+  .editable {
+    cursor: text;
+    outline: none;
+    border-radius: 2px;
+  }
+  .editable.is-placeholder { opacity: 0.55; font-style: italic; }
+  .editable:focus {
+    box-shadow: 0 0 0 2px var(--blue);
+    background: rgba(36,81,255,0.06);
+  }
+
+  /* ---------- Photo edit button (cover / profile hero) ---------- */
+  .photo-edit-btn {
+    position: absolute; top: 0.9rem; right: 0.9rem; z-index: 5;
+    display: flex; align-items: center; gap: 0.35rem;
+    background: rgba(20,23,31,0.55); color: #fff;
+    border: 1px solid rgba(255,255,255,0.35);
+    font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.03em;
+    padding: 0.4rem 0.6rem; border-radius: var(--radius); cursor: pointer;
+  }
+  .photo-edit-btn svg { width: 13px; height: 13px; }
+  .photo-edit-btn:hover { background: rgba(20,23,31,0.8); }
+
+  .caption {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    margin-top: 0.4rem;
+  }
+
+  /* ---------- Card shell: fixed 9:16 ---------- */
+  .snap-container { padding: 1.5rem 0; display: flex; flex-direction: column; gap: 1.25rem; align-items: center; }
+  .card {
+    width: 100%;
+    max-width: calc(100svh * 9 / 16);
+    aspect-ratio: 9 / 16;
+    max-height: 100svh;
+    margin: 0 auto;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    box-shadow: 0 0 0 1px var(--line);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: var(--paper);
+  }
+
+  /* ---------- Section: Cover (full-bleed background slot) ---------- */
+  .card--cover { background: var(--ink); color: var(--paper); }
+  .card--cover .cover-bg { position: absolute; inset: 0; border-radius: 0; border: 1.5px dashed #414957; color: #9AA3B2; background: rgba(255,255,255,0.03); }
+  .card--cover .cover-overlay {
+    position: relative; z-index: 2; height: 100%;
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: clamp(1.1rem, 4vw, 1.75rem);
+    background: linear-gradient(to top, rgba(20,23,31,0.88) 0%, rgba(20,23,31,0.1) 45%, rgba(20,23,31,0.6) 100%);
+    overflow-y: auto;
+  }
+  .card--cover .top-row { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.7rem; color: #C7CDD6; }
+  .card--cover h1 { font-size: clamp(2rem, 9vw, 2.8rem); line-height: 1.03; letter-spacing: -0.01em; }
+  .card--cover .tagline { font-family: var(--font-body); font-size: clamp(0.92rem, 3vw, 1.05rem); color: #C7CDD6; margin-top: 0.75rem; max-width: 32ch; }
+
+  /* ---------- Section: Profile Spotlight (same pattern as cover, own accent) ---------- */
+  .card--profile { background: var(--ink); color: var(--paper); }
+  .card--profile .profile-bg { position: absolute; inset: 0; border-radius: 0; border: 1.5px dashed #414957; color: #9AA3B2; background: rgba(255,255,255,0.03); }
+  .card--profile .profile-overlay {
+    position: relative; z-index: 2; height: 100%;
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: clamp(1.1rem, 4vw, 1.75rem);
+    background: linear-gradient(to top, rgba(20,23,31,0.9) 0%, rgba(20,23,31,0.05) 42%, rgba(20,23,31,0.05) 58%, rgba(20,23,31,0.55) 100%);
+    overflow-y: auto;
+  }
+  .card--profile .top-row { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 0.7rem; }
+  .card--profile .tag { background: var(--amber); color: var(--ink); padding: 0.25rem 0.6rem; border-radius: var(--radius); letter-spacing: 0.04em; }
+  .card--profile .tag .editable { padding: 0 0.15rem; }
+  .card--profile .index { color: #C7CDD6; }
+  .card--profile h2 { font-size: clamp(1.9rem, 8vw, 2.6rem); line-height: 1.05; }
+  .card--profile .quote { font-family: var(--font-body); font-style: italic; font-size: clamp(0.9rem, 3vw, 1rem); color: #DDE1E6; margin-top: 0.65rem; max-width: 34ch; }
+
+  /* ---------- Section: Subject Directory (hero + browse grid) ---------- */
+  .card-inner--dense { justify-content: flex-start; gap: 1rem; }
+  .subject-hero { display: flex; flex-direction: column; gap: 0.4rem; }
+  .subject-title { font-size: clamp(1.6rem, 7vw, 2.1rem); line-height: 1.05; margin-top: 0.15rem; }
+  .subject-credit { font-family: var(--font-body); font-size: 0.82rem; color: var(--ink-soft); }
+  .meta-tag { display: inline-block; margin-top: 0.4rem; font-family: var(--font-mono); font-size: 0.66rem; border: 1px solid var(--line); border-radius: var(--radius); padding: 0.2rem 0.5rem; color: var(--ink-soft); }
+
+  .subject-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.7rem;
+  }
+  .subject-thumb { display: flex; flex-direction: column; gap: 0.35rem; text-decoration: none; color: inherit; }
+  .subject-thumb .slot { aspect-ratio: 1 / 1; }
+  .subject-thumb .slot svg { width: 22px; height: 22px; }
+  .thumb-caption { display: flex; flex-direction: column; gap: 0.08rem; }
+  .thumb-caption .num { font-family: var(--font-mono); font-size: 0.66rem; color: var(--blue); }
+  .thumb-caption strong { font-family: var(--font-display); font-size: 0.86rem; font-weight: 600; display: block; }
+  .thumb-caption .role { font-family: var(--font-body); font-size: 0.7rem; color: var(--ink-soft); display: block; }
+
+  /* ---------- Card shell (non-cover) ---------- */
+  .card-inner {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.1rem;
+    padding: clamp(1.1rem, 4vw, 1.6rem);
+  }
+  .page-head { display: flex; align-items: baseline; gap: 0.8rem; }
+  .page-head .num { font-family: var(--font-mono); color: var(--blue); font-size: 0.95rem; }
+  .page-head h2 { font-size: clamp(1.6rem, 3.5vw, 2.4rem); }
+
+  /* ---------- TOC ---------- */
+  .toc-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 84px;
+    gap: 0.55rem;
+  }
+  .toc-tile {
+    border-radius: var(--radius);
+    padding: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-decoration: none;
+    transition: transform 0.15s ease;
+    cursor: pointer;
+  }
+  .toc-tile:hover { transform: translateY(-3px); }
+  .toc-tile .num { font-family: var(--font-mono); font-size: 0.8rem; }
+  .toc-tile .name { font-family: var(--font-display); font-weight: 600; font-size: 1rem; }
+  .toc-tile--ink { background: var(--ink); color: var(--paper); grid-column: span 2; grid-row: span 2; }
+  .toc-tile--blue { background: var(--blue); color: var(--paper); grid-column: span 2; }
+  .toc-tile--amber { background: var(--amber); color: var(--ink); grid-column: span 1; }
+  .toc-tile--outline { background: transparent; border: 1.5px solid var(--line); color: var(--ink); grid-column: span 1; }
+  .toc-tile--paper { background: var(--paper-alt); color: var(--ink); grid-column: span 2; }
+
+  /* ---------- Documentation / photo collage ---------- */
+  .collage-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 88px;
+    gap: 0.55rem;
+  }
+  .collage-item { display: flex; flex-direction: column; }
+  .collage-item .slot { flex: 1; }
+  .collage-item:nth-child(1) { grid-column: span 2; grid-row: span 2; }
+  .collage-item:nth-child(2) { grid-column: span 1; grid-row: span 2; }
+  .collage-item:nth-child(3) { grid-column: span 1; grid-row: span 2; }
+  .collage-item:nth-child(4) { grid-column: span 2; grid-row: span 1; }
+
+  /* ---------- Video feature ---------- */
+  .video-wrap { display: flex; flex-direction: column; align-items: center; gap: 1.25rem; text-align: center; }
+  .video-wrap .slot { width: min(720px, 100%); aspect-ratio: 16 / 9; }
+  .video-wrap h3 { font-size: clamp(1.3rem, 3vw, 1.9rem); max-width: 32ch; }
+  .video-wrap p { color: var(--ink-soft); max-width: 52ch; }
+
+  .video-form { display: flex; flex-direction: column; gap: 0.6rem; width: 82%; }
+  .video-form input {
+    font-family: var(--font-mono); font-size: 0.78rem;
+    padding: 0.55rem 0.6rem; border: 1px solid var(--line); border-radius: var(--radius);
+    background: #fff; color: var(--ink);
+  }
+  .video-form button {
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.03em;
+    background: var(--ink); color: var(--paper); border: none;
+    padding: 0.55rem; border-radius: var(--radius); cursor: pointer;
+  }
+  .video-form button:hover { background: #2b3040; }
+
+  .slot.has-video { cursor: default; border: none; background: #000; padding: 0; }
+  .slot.has-video iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+  /* ---------- Roadmap strip ---------- */
+  .roadmap {
+    padding: 2rem clamp(1.25rem, 5vw, 4rem) 3rem;
+    border-top: 1px solid var(--line);
+  }
+  .roadmap .eyebrow { margin-bottom: 0.9rem; }
+  .roadmap-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .roadmap-tags span {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    padding: 0.35rem 0.6rem;
+    color: var(--ink-soft);
+  }
+</style>
+</head>
+<body>
+
+<div class="gauge" id="gauge"></div>
+
+<div class="snap-container">
+
+<!-- ============ COVER ============ -->
+<section id="cover" class="card card--cover" data-nav="Sampul">
+  <div class="cover-bg slot" id="coverBgSlot">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-11 11"/></svg>
+    <span>+ TAMBAH FOTO SAMPUL</span>
+  </div>
+  <div class="cover-overlay">
+    <button type="button" class="photo-edit-btn" id="coverPhotoBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-11 11"/></svg>
+      Ganti Foto
+    </button>
+    <div class="top-row">
+      <span>MAJALAH SEKOLAH</span>
+      <span class="editable" data-max="20">ED. 001/2026</span>
+    </div>
+    <div class="title-block reveal">
+      <h1 class="editable" data-max="40">[Nama Majalah]</h1>
+      <p class="tagline editable" data-max="90">[Tagline singkat edisi ini — ganti dengan kalimat pembuka.]</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TOC ============ -->
+<section id="toc" class="card" data-nav="Daftar Isi">
+  <div class="card-inner">
+  <div class="page-head reveal"><span class="num">02</span><h2>Daftar Isi</h2></div>
+  <div class="toc-grid reveal">
+    <a href="#documentation" class="toc-tile toc-tile--ink">
+      <span class="num">03</span>
+      <span class="name">Dokumentasi Kegiatan</span>
+    </a>
+    <a href="#video" class="toc-tile toc-tile--blue">
+      <span class="num">04</span>
+      <span class="name">Video</span>
+    </a>
+    <a href="#subject-directory" class="toc-tile toc-tile--amber"><span class="num">05</span><span class="name">Guru</span></a>
+    <div class="toc-tile toc-tile--outline"><span class="num">06</span><span class="name">Siswa</span></div>
+    <div class="toc-tile toc-tile--paper"><span class="num">07</span><span class="name">Artikel</span></div>
+  </div>
+  </div>
+</section>
+
+<!-- ============ DOCUMENTATION ============ -->
+<section id="documentation" class="card" data-nav="Dokumentasi">
+  <div class="card-inner">
+  <div class="page-head reveal"><span class="num">03</span><h2>Dokumentasi Kegiatan</h2></div>
+  <div class="collage-grid reveal">
+    <div class="collage-item">
+      <div class="slot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-11 11"/></svg><span>+ FOTO</span></div>
+      <div class="caption">KETERANGAN — <span class="editable" data-max="60">[isi]</span></div>
+    </div>
+    <div class="collage-item">
+      <div class="slot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-11 11"/></svg><span>+ FOTO</span></div>
+      <div class="caption">KETERANGAN — <span class="editable" data-max="60">[isi]</span></div>
+    </div>
+    <div class="collage-item">
+      <div class="slot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-11 11"/></svg><span>+ FOTO</span></div>
+      <div class="caption">KETERANGAN — <span class="editable" data-max="60">[isi]</span></div>
+    </div>
+    <div class="collage-item">
+      <div class="slot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-11 11"/></svg><span>+ FOTO</span></div>
+      <div class="caption">KETERANGAN — <span class="editable" data-max="60">[isi]</span></div>
+    </div>
+  </div>
+  </div>
+</section>
+
+<!-- ============ VIDEO ============ -->
+<section id="video" class="card" data-nav="Video">
+  <div class="card-inner">
+  <div class="page-head reveal"><span class="num">04</span><h2>Video</h2></div>
+  <div class="video-wrap reveal">
+    <div class="slot" id="videoSlot">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l6 3.5-6 3.5z" fill="currentColor" stroke="none"/></svg>
+      <span>+ TEMPEL TAUTAN YOUTUBE</span>
+    </div>
+    <h3 class="editable" data-max="60">[Judul video/rekap kegiatan]</h3>
+    <p class="editable" data-max="140">[Keterangan singkat 1-2 kalimat.]</p>
+  </div>
+  </div>
+</section>
+
+<!-- ============ SUBJECT DIRECTORY ============ -->
+<section id="subject-directory" class="card" data-nav="Direktori Mapel">
+  <div class="card-inner card-inner--dense">
+    <div class="subject-hero reveal">
+      <span class="eyebrow">MATA PELAJARAN</span>
+      <h2 class="subject-title editable" data-max="40">[Nama Mata Pelajaran]</h2>
+      <p class="subject-credit">Dikurasi oleh <span class="editable" data-max="30">[Nama Koordinator]</span> — <span class="editable" data-max="90">[catatan singkat tentang mapel ini]</span>.</p>
+      <span class="meta-tag"><span class="editable" data-max="3">[N]</span> GURU</span>
+    </div>
+    <span class="eyebrow">GURU DI MAPEL INI</span>
+    <div class="subject-grid reveal">
+      <a href="#profile-teacher" class="subject-thumb">
+        <div class="slot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-11 11"/></svg><span>+ FOTO</span></div>
+        <div class="thumb-caption"><span class="num">01</span><strong class="editable" data-max="30">[Nama Guru]</strong><span class="role editable" data-max="30">[Peran/kelas]</span></div>
+      </a>
+      <div class="subject-thumb">
+        <div class="slot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-11 11"/></svg><span>+ FOTO</span></div>
+        <div class="thumb-caption"><span class="num">02</span><strong class="editable" data-max="30">[Nama Guru]</strong><span class="role editable" data-max="30">[Peran/kelas]</span></div>
+      </div>
+      <div class="subject-thumb">
+        <div class="slot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-11 11"/></svg><span>+ FOTO</span></div>
+        <div class="thumb-caption"><span class="num">03</span><strong class="editable" data-max="30">[Nama Guru]</strong><span class="role editable" data-max="30">[Peran/kelas]</span></div>
+      </div>
+      <div class="subject-thumb">
+        <div class="slot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-11 11"/></svg><span>+ FOTO</span></div>
+        <div class="thumb-caption"><span class="num">04</span><strong class="editable" data-max="30">[Nama Guru]</strong><span class="role editable" data-max="30">[Peran/kelas]</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROFILE SPOTLIGHT: GURU ============ -->
+<section id="profile-teacher" class="card card--profile" data-nav="Profil Guru">
+  <div class="profile-bg slot" id="profileBgSlot">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-11 11"/></svg>
+    <span>+ TAMBAH FOTO GURU</span>
+  </div>
+  <div class="profile-overlay">
+    <button type="button" class="photo-edit-btn" id="profilePhotoBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-11 11"/></svg>
+      Ganti Foto
+    </button>
+    <div class="top-row">
+      <span class="tag">GURU · <span class="editable" data-max="30">[MATA PELAJARAN]</span></span>
+      <span class="index">01 / 12</span>
+    </div>
+    <div class="reveal">
+      <h2 class="editable" data-max="40">[Nama Guru]</h2>
+      <p class="quote">&ldquo;<span class="editable" data-max="140">[Kutipan singkat atau motto mengajar — ganti di sini.]</span>&rdquo;</p>
+    </div>
+  </div>
+</section>
+
+</div><!-- /.snap-container -->
+
+<!-- ============ ROADMAP ============ -->
+<section class="roadmap reveal" style="max-width: calc(100svh * 9 / 16); margin: 0 auto;">
+  <div class="eyebrow">Tahap 2 — layout berikutnya</div>
+  <div class="roadmap-tags">
+    <span>PROFIL_SISWA</span>
+    <span>KELOMPOK_FOTO</span>
+    <span>ARTIKEL_FITUR</span>
+    <span>CATATAN_REDAKSI</span>
+    <span>KUTIPAN</span>
+    <span>SAMPUL_BELAKANG</span>
+  </div>
+</section>
+
+<!-- ============ FLOATING NAV ============ -->
+<button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="navPanel" aria-label="Buka menu bagian">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6h16M4 6v3M9 6v5M14 6v3M19 6v5M4 18h16M4 18v-3M9 18v-5M14 18v-3M19 18v-5"/></svg>
+</button>
+<nav class="nav-panel" id="navPanel"></nav>
+
+<!-- ============ FLOATING INFO / CARA PAKAI ============ -->
+<button class="info-toggle" id="infoToggle" aria-expanded="false" aria-controls="infoPanel" aria-label="Cara pakai template">?</button>
+<div class="info-panel" id="infoPanel">
+  <strong>Cara Pakai</strong>
+  <ol>
+    <li>Klik area bergaris putus-putus (atau tombol "Ganti Foto") untuk mengunggah gambar.</li>
+    <li>Klik langsung pada teks untuk mengubahnya — teks contoh dalam kurung akan hilang otomatis.</li>
+    <li>Klik area video untuk menempelkan tautan YouTube.</li>
+    <li>Simpan file ini (Ctrl/Cmd+S di browser, "Save Page As → Webpage, Complete") untuk menyimpan isian.</li>
+  </ol>
+</div>
+
+<script>
+  /* ============ Section nav (unchanged from prototype) ============ */
+  const pages = [...document.querySelectorAll('[data-nav]')].map((el, i) => ({
+    id: el.id,
+    label: el.dataset.nav,
+    num: String(i + 1).padStart(2, '0')
+  }));
+
+  const navPanel = document.getElementById('navPanel');
+  navPanel.innerHTML = pages.map(p =>
+    `<a href="#${p.id}" data-target="${p.id}"><span class="tick">${p.num}</span>${p.label}</a>`
+  ).join('');
+
+  const navToggle = document.getElementById('navToggle');
+  navToggle.addEventListener('click', () => {
+    const open = navPanel.classList.toggle('is-open');
+    navToggle.setAttribute('aria-expanded', open);
+  });
+  navPanel.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      navPanel.classList.remove('is-open');
+      navToggle.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  const sections = pages.map(p => document.getElementById(p.id));
+  const links = [...navPanel.querySelectorAll('a')];
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('is-active'));
+        const active = navPanel.querySelector(`[data-target="${entry.target.id}"]`);
+        if (active) active.classList.add('is-active');
+      }
+    });
+  }, { threshold: 0.5 });
+  sections.forEach(s => observer.observe(s));
+
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+  const gauge = document.getElementById('gauge');
+  window.addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+    gauge.style.width = scrolled + '%';
+  });
+
+  /* ============ Info panel toggle ============ */
+  const infoToggle = document.getElementById('infoToggle');
+  const infoPanel = document.getElementById('infoPanel');
+  infoToggle.addEventListener('click', () => {
+    const open = infoPanel.classList.toggle('is-open');
+    infoToggle.setAttribute('aria-expanded', open);
+  });
+
+  /* ============ Photo upload: shared file input + canvas compression ============ */
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.hidden = true;
+  document.body.appendChild(fileInput);
+
+  let uploadTarget = null;
+  let uploadOpts = {};
+
+  function requestUpload(targetEl, opts) {
+    uploadTarget = targetEl;
+    uploadOpts = opts || {};
+    fileInput.value = '';
+    fileInput.click();
+  }
+
+  function processImage(file, maxDim, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          const lowRes = Math.min(img.width, img.height) < 1000;
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+            else { width = Math.round(width * maxDim / height); height = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          resolve({ dataUrl: canvas.toDataURL('image/jpeg', quality), lowRes });
+        };
+        img.onerror = () => reject(new Error('Gagal memuat gambar'));
+        img.src = ev.target.result;
+      };
+      reader.onerror = () => reject(new Error('Gagal membaca berkas'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function setLowResBadge(el, show) {
+    let badge = el.querySelector(':scope > .low-res-badge');
+    if (show && !badge) {
+      badge = document.createElement('span');
+      badge.className = 'low-res-badge';
+      badge.textContent = 'RESOLUSI RENDAH';
+      el.appendChild(badge);
+    } else if (!show && badge) {
+      badge.remove();
+    }
+  }
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files[0];
+    if (!file || !uploadTarget) return;
+    try {
+      const { dataUrl, lowRes } = await processImage(file, uploadOpts.maxDim || 1200, uploadOpts.quality || 0.82);
+      uploadTarget.style.backgroundImage = `url("${dataUrl}")`;
+      uploadTarget.classList.add('has-image');
+      setLowResBadge(uploadTarget, lowRes);
+    } catch (err) {
+      alert('Gagal memproses gambar: ' + err.message);
+    }
+  });
+
+  // Direct-click slots: collage photos + subject-directory thumbnails
+  document.querySelectorAll('.collage-item .slot, .subject-thumb .slot').forEach(slot => {
+    slot.addEventListener('click', (e) => {
+      e.preventDefault();
+      requestUpload(slot, { maxDim: 900, quality: 0.8 });
+    });
+  });
+
+  // Hero slots (cover / profile) go through the dedicated "Ganti Foto" button,
+  // since the gradient overlay sits on top and would otherwise swallow clicks.
+  document.getElementById('coverPhotoBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    requestUpload(document.getElementById('coverBgSlot'), { maxDim: 1600, quality: 0.85 });
+  });
+  document.getElementById('profilePhotoBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    requestUpload(document.getElementById('profileBgSlot'), { maxDim: 1600, quality: 0.85 });
+  });
+
+  /* ============ Editable text: click-to-edit with hard character limits ============ */
+  function placeCaretAtEnd(el) {
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  document.querySelectorAll('.editable').forEach(el => {
+    const max = parseInt(el.dataset.max, 10) || null;
+    const placeholder = el.textContent.trim();
+    el.dataset.placeholder = placeholder;
+    el.contentEditable = 'true';
+    el.classList.add('is-placeholder');
+
+    el.addEventListener('focus', () => {
+      if (el.classList.contains('is-placeholder')) {
+        el.textContent = '';
+        el.classList.remove('is-placeholder');
+      }
+    });
+
+    el.addEventListener('blur', () => {
+      if (!el.textContent.trim()) {
+        el.textContent = el.dataset.placeholder;
+        el.classList.add('is-placeholder');
+      }
+    });
+
+    el.addEventListener('input', () => {
+      if (max && el.textContent.length > max) {
+        el.textContent = el.textContent.slice(0, max);
+        placeCaretAtEnd(el);
+      }
+    });
+
+    // Enter commits instead of inserting a newline, for single-line fields.
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !el.closest('.subject-credit, .video-wrap p, .tagline')) {
+        e.preventDefault();
+        el.blur();
+      }
+    });
+  });
+
+  /* ============ Video slot: paste a YouTube link, get an embed ============ */
+  function extractYouTubeId(url) {
+    const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
+    return m ? m[1] : null;
+  }
+
+  const videoSlot = document.getElementById('videoSlot');
+  videoSlot.addEventListener('click', () => {
+    if (videoSlot.classList.contains('has-video') || videoSlot.querySelector('.video-form')) return;
+    videoSlot.innerHTML = `
+      <form class="video-form">
+        <input type="url" inputmode="url" placeholder="Tempel tautan YouTube di sini" required />
+        <button type="submit">Pasang Video</button>
+      </form>`;
+    const form = videoSlot.querySelector('form');
+    form.addEventListener('click', (e) => e.stopPropagation());
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const url = form.querySelector('input').value.trim();
+      const id = extractYouTubeId(url);
+      if (!id) {
+        alert('Tautan YouTube tidak dikenali. Salin tautan langsung dari tombol "Bagikan" di YouTube.');
+        return;
+      }
+      videoSlot.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}" title="Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>`;
+      videoSlot.classList.add('has-video');
+    });
+  });
+</script>
+
+</body>
+</html>
