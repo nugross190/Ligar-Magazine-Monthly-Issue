@@ -5,12 +5,26 @@ A browser-based, template-driven tool for building a school magazine (SMAN 5 Gar
 ## Contents
 
 - `docs/majalah_sekolah_layout_spec.md` — Layout system spec (draft v0.2): concept, architecture, template taxonomy, slot system, export plan, staged build roadmap.
-- `prototypes/majalah_prototype_v2_profile_guru.html` — Working HTML/CSS/JS prototype: cover, table of contents, documentation collage, video feature, subject directory, and teacher profile spotlight cards, wired up with scroll-snap navigation, a floating jump menu, and scroll-reveal animation.
+- `prototypes/` — Visual-only mockups (round 1 of a template: matches the reference, nothing is fillable yet).
+- `templates/` — Functional, standalone templates another teacher can actually open and fill in (real photo upload, editable text, video embed). `templates/_shared/README.md` documents the conventions reused across all of them.
 
 ## Format
 
 Every page is a fixed 9:16 story card (Stories/Reels proportions) navigated via vertical scroll-snap, so each card also works standalone as an exportable social asset.
 
+## Template registry
+
+| File | Templates covered | Status | Notes |
+|---|---|---|---|
+| `prototypes/majalah_prototype_v2_profile_guru.html` | COVER, TOC, PHOTO_COLLAGE, VIDEO_FEATURE, SUBJECT_DIRECTORY, PROFILE_SPOTLIGHT | Visual mockup (round 1) | Superseded by the functional version below; kept as the round-1 reference. |
+| `templates/majalah_functional_v1.html` | COVER, TOC, PHOTO_COLLAGE, VIDEO_FEATURE, SUBJECT_DIRECTORY, PROFILE_SPOTLIGHT | **Functional** (round 2) | Click-to-upload photos (auto-compressed, low-res warning), click-to-edit text (hard character limits), paste-a-link YouTube embed. No PNG export or blank/instance separation yet. |
+
 ## Status
 
-Early prototype stage (Stage 1–2 of the staged build plan in the spec). Template registry pattern is recommended but not yet implemented in code — the current prototype hand-codes each section as a proof of concept for the visual language and interaction model.
+Stage 1 of the staged build plan in the spec: template registry pattern isn't
+code yet (each template is still one hand-built file), but the first batch of
+sections is functionally usable end-to-end — upload → edit → embed — matching
+the "COVER, TOC, PHOTO_COLLAGE" proof-of-concept goal, plus three more section
+types along for the ride. Not yet built: per-section PNG export for social,
+a blank-template-vs-filled-instance workflow, and the page-management shell
+(Stage 3).
