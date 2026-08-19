@@ -17,14 +17,14 @@ Every page is a fixed 9:16 story card (Stories/Reels proportions) navigated via 
 | File | Templates covered | Status | Notes |
 |---|---|---|---|
 | `prototypes/majalah_prototype_v2_profile_guru.html` | COVER, TOC, PHOTO_COLLAGE, VIDEO_FEATURE, SUBJECT_DIRECTORY, PROFILE_SPOTLIGHT | Visual mockup (round 1) | Superseded by the functional version below; kept as the round-1 reference. |
-| `templates/majalah_functional_v1.html` | COVER, TOC, PHOTO_COLLAGE, VIDEO_FEATURE, SUBJECT_DIRECTORY, PROFILE_SPOTLIGHT | **Functional** (round 2) | Click-to-upload photos (auto-compressed, low-res warning), click-to-edit text (hard character limits), paste-a-link YouTube embed. No PNG export or blank/instance separation yet. |
+| `templates/majalah_functional_v1.html` | COVER, TOC, PHOTO_COLLAGE, VIDEO_FEATURE, SUBJECT_DIRECTORY, PROFILE_SPOTLIGHT | **Functional** (round 2) | Click-to-upload photos (auto-compressed, low-res warning), click-to-edit text (hard character limits), paste-a-link YouTube embed, and now a per-card "unduh PNG" button for social posting. Blank-vs-filled-instance is a written warning only, not enforced in code yet. |
 
 ## Status
 
 Stage 1 of the staged build plan in the spec: template registry pattern isn't
 code yet (each template is still one hand-built file), but the first batch of
-sections is functionally usable end-to-end — upload → edit → embed — matching
-the "COVER, TOC, PHOTO_COLLAGE" proof-of-concept goal, plus three more section
-types along for the ride. Not yet built: per-section PNG export for social,
-a blank-template-vs-filled-instance workflow, and the page-management shell
-(Stage 3).
+sections is functionally usable end-to-end — upload → edit → embed → export —
+matching the "COVER, TOC, PHOTO_COLLAGE" proof-of-concept goal, plus three
+more section types along for the ride, plus the §7 per-page PNG export for
+social. Not yet built: enforced blank-template protection (currently just a
+warning), editable TOC/index labels, and the page-management shell (Stage 3).

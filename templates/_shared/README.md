@@ -66,6 +66,29 @@ Three behaviors get re-wired per template; keep the same shape each time:
    only — never inline a video as base64; it bloats the single-file export
    past what a browser will load reliably (see the layout spec, §5).
 
+4. **Per-card PNG export** — one `.export-btn` per `.card`, added via JS
+   (`document.querySelectorAll('.card').forEach(...)`) rather than hand-
+   written per section, so a new template gets it for free just by using the
+   `.card` class. Lazy-loads `html2canvas` from a CDN on first click (not
+   bundled inline, so the file still opens instantly before anyone exports
+   anything), toggles a `body.exporting` class that hides all editing chrome
+   (`display: none !important` on nav/info/photo-edit/export buttons, the
+   progress gauge, low-res badges) so the captured PNG is clean, then
+   downloads `majalah-<section-slug>.png`. Wrap the whole thing in
+   try/catch/finally — a blocked or offline CDN load must fail with a plain
+   alert and reset the button, not hang or throw. This satisfies the spec's
+   "each page also doubles as a social asset" requirement (§7).
+
+## Blank template vs. filled instance
+
+There's no tooling yet to protect the reusable blank template from being
+overwritten by whoever fills it in — the current mitigation is a written
+warning in both the file's header comment and the in-page "Cara Pakai"
+panel: duplicate the file (Save As) before typing anything in. If this
+becomes a real problem in practice (someone forgets, loses the blank), the
+next step would be a "Reset to blank" control rather than relying on
+discipline — not built yet, flagged here so it isn't lost.
+
 ## Floating chrome
 
 Two fixed circular buttons, bottom corners: nav toggle (bottom-right, jump
@@ -77,7 +100,9 @@ template introduces a new kind of slot.
 
 ## Still open / not yet solved by any template
 
-- Per-section PNG export (html2canvas) for social — spec §7, not built yet.
+- Blank-vs-filled-instance protection beyond a written warning (see above).
+- TOC section labels and the "01 / 12" profile index counter are still
+  static, not editable.
 - Multi-card pagination for long-form content (`FEATURE_SPREAD`) — spec §3a.
 - Whole-magazine page management shell (add/remove/reorder pages) — spec §8,
   Stage 3.
