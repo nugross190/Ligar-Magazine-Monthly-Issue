@@ -50,6 +50,25 @@ Three behaviors get re-wired per template; keep the same shape each time:
    need a dedicated `.photo-edit-btn` instead, because the overlay div sits
    on top and swallows clicks meant for the background slot underneath.
 
+   Two stacking traps, both already hit once on the cover — don't re-derive
+   them:
+
+   - The `.slot.has-image::before` "Ganti Foto" scrim must be
+     `pointer-events: none`. `.slot` is `position: relative` with
+     `z-index: auto`, so it opens no stacking context and the scrim's
+     `z-index: 3` resolves against the *card*, painting above the
+     `z-index: 2` text overlay. On a hero slot that is `inset: 0` over the
+     whole card, and `opacity: 0` still takes clicks — so every text field
+     on the card goes dead the moment a photo lands. With pointer-events
+     off, small slots are unaffected: the click falls through to the
+     `.slot`, which is what carries the listener anyway.
+   - Don't absolutely pin `.photo-edit-btn` to the top-right corner — the
+     `.top-row` eyebrow already puts text there (edition badge, profile
+     index) and the button covers it. Keep it in flow instead: wrap the
+     eyebrow row and the button in `.overlay-head`
+     (`flex-direction: column; align-items: flex-end`) so the button stacks
+     underneath, right-aligned, with no offsets to tune per card.
+
 2. **Editable text** — any element gets `class="editable" data-max="N"`.
    Bracketed placeholder text (`[Nama Guru]`) is stored in
    `data-placeholder`, shown dimmed/italic (`.is-placeholder`), cleared on
@@ -101,6 +120,10 @@ template introduces a new kind of slot.
 ## Still open / not yet solved by any template
 
 - Blank-vs-filled-instance protection beyond a written warning (see above).
+- The per-card `.export-btn` (top-left, `z-index: 20`) overlaps the start of
+  the `.top-row` eyebrow text on the two hero cards. Cosmetic only — the text
+  it covers is static, and the button is hidden during export — but it's the
+  same corner collision as the `.photo-edit-btn` one above, not yet resolved.
 - TOC section labels and the "01 / 12" profile index counter are still
   static, not editable.
 - Multi-card pagination for long-form content (`FEATURE_SPREAD`) — spec §3a.

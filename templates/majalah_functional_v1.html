@@ -224,6 +224,11 @@
     font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.04em;
     opacity: 0; transition: opacity 0.15s ease;
     z-index: 3;
+    /* Purely a hover affordance — never a click target. Without this, the scrim of a
+       full-bleed hero slot covers the whole card and swallows clicks meant for the text
+       overlay above it (cover title, tagline). Small slots are unaffected: the click
+       passes straight through to the .slot itself, which is what carries the listener. */
+    pointer-events: none;
   }
   .slot.has-image:hover::before,
   .slot.has-image:focus-visible::before { opacity: 1; }
@@ -249,8 +254,14 @@
   }
 
   /* ---------- Photo edit button (cover / profile hero) ---------- */
+  /* Head block of a hero overlay: the eyebrow row flush to the top edge, with the
+     "Ganti Foto" button stacked underneath it and right-aligned. The button used to be
+     absolutely pinned to the top-right corner, where it sat on top of the .top-row text
+     on that side and made it unclickable. Keeping it in flow means no overlap to tune. */
+  .overlay-head { display: flex; flex-direction: column; align-items: flex-end; gap: 0.6rem; }
+  .overlay-head .top-row { width: 100%; }
+
   .photo-edit-btn {
-    position: absolute; top: 0.9rem; right: 0.9rem; z-index: 5;
     display: flex; align-items: center; gap: 0.35rem;
     background: rgba(20,23,31,0.55); color: #fff;
     border: 1px solid rgba(255,255,255,0.35);
@@ -468,13 +479,15 @@
     <span>+ TAMBAH FOTO SAMPUL</span>
   </div>
   <div class="cover-overlay">
-    <button type="button" class="photo-edit-btn" id="coverPhotoBtn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-11 11"/></svg>
-      Ganti Foto
-    </button>
-    <div class="top-row">
-      <span>MAJALAH SEKOLAH</span>
-      <span class="editable" data-max="20">ED. 001/2026</span>
+    <div class="overlay-head">
+      <div class="top-row">
+        <span>MAJALAH SEKOLAH</span>
+        <span class="editable" data-max="20">ED. 001/2026</span>
+      </div>
+      <button type="button" class="photo-edit-btn" id="coverPhotoBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-11 11"/></svg>
+        Ganti Foto
+      </button>
     </div>
     <div class="title-block reveal">
       <h1 class="editable" data-max="40">[Nama Majalah]</h1>
@@ -581,13 +594,15 @@
     <span>+ TAMBAH FOTO GURU</span>
   </div>
   <div class="profile-overlay">
-    <button type="button" class="photo-edit-btn" id="profilePhotoBtn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-11 11"/></svg>
-      Ganti Foto
-    </button>
-    <div class="top-row">
-      <span class="tag">GURU · <span class="editable" data-max="30">[MATA PELAJARAN]</span></span>
-      <span class="index">01 / 12</span>
+    <div class="overlay-head">
+      <div class="top-row">
+        <span class="tag">GURU · <span class="editable" data-max="30">[MATA PELAJARAN]</span></span>
+        <span class="index">01 / 12</span>
+      </div>
+      <button type="button" class="photo-edit-btn" id="profilePhotoBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5-11 11"/></svg>
+        Ganti Foto
+      </button>
     </div>
     <div class="reveal">
       <h2 class="editable" data-max="40">[Nama Guru]</h2>
