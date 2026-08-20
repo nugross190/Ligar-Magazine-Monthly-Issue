@@ -254,12 +254,26 @@
   }
 
   /* ---------- Photo edit button (cover / profile hero) ---------- */
-  /* Head block of a hero overlay: the eyebrow row flush to the top edge, with the
-     "Ganti Foto" button stacked underneath it and right-aligned. The button used to be
-     absolutely pinned to the top-right corner, where it sat on top of the .top-row text
-     on that side and made it unclickable. Keeping it in flow means no overlap to tune. */
-  .overlay-head { display: flex; flex-direction: column; align-items: flex-end; gap: 0.6rem; }
-  .overlay-head .top-row { width: 100%; }
+  /* Head block of a hero overlay: the eyebrow row across the top, with both chrome
+     buttons on the line beneath it — export on the left, "Ganti Foto" on the right.
+     Both used to be absolutely pinned to the top corners, on top of the .top-row text
+     already sitting there (the eyebrow label on the left, edition badge / profile index
+     on the right) — which made the right-hand text unclickable and the left-hand text
+     unreadable. In flow there are no per-card offsets to tune and nothing to collide
+     with, whatever height the eyebrow row happens to be. */
+  .overlay-head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      "eyebrow eyebrow eyebrow"
+      "export  .       photo";
+    gap: 0.6rem;
+    align-items: center;
+  }
+  .overlay-head .top-row { grid-area: eyebrow; }
+  .overlay-head .photo-edit-btn { grid-area: photo; }
+  /* In the head block the export button is a grid item, not a corner overlay. */
+  .overlay-head .export-btn { grid-area: export; position: static; }
 
   .photo-edit-btn {
     display: flex; align-items: center; gap: 0.35rem;
@@ -923,7 +937,9 @@
       e.stopPropagation();
       exportCardAsPng(card, btn);
     });
-    card.appendChild(btn);
+    const head = card.querySelector('.overlay-head');
+    if (head) head.insertBefore(btn, head.querySelector('.photo-edit-btn'));
+    else card.appendChild(btn);
   });
 </script>
 
