@@ -62,12 +62,14 @@ Three behaviors get re-wired per template; keep the same shape each time:
      on the card goes dead the moment a photo lands. With pointer-events
      off, small slots are unaffected: the click falls through to the
      `.slot`, which is what carries the listener anyway.
-   - Don't absolutely pin `.photo-edit-btn` to the top-right corner — the
-     `.top-row` eyebrow already puts text there (edition badge, profile
-     index) and the button covers it. Keep it in flow instead: wrap the
-     eyebrow row and the button in `.overlay-head`
-     (`flex-direction: column; align-items: flex-end`) so the button stacks
-     underneath, right-aligned, with no offsets to tune per card.
+   - Don't absolutely pin chrome to the top corners of a hero card — the
+     `.top-row` eyebrow already puts text in both (the label on the left,
+     edition badge or profile index on the right), and a corner button lands
+     on top of it. Both `.photo-edit-btn` and the per-card `.export-btn` hit
+     this. Keep them in flow instead: `.overlay-head` is a two-row grid
+     holding the eyebrow across the top and the two buttons on the line
+     beneath it, export left and "Ganti Foto" right, so nothing has to be
+     offset by hand for whatever height the eyebrow turns out to be.
 
 2. **Editable text** — any element gets `class="editable" data-max="N"`.
    Bracketed placeholder text (`[Nama Guru]`) is stored in
@@ -88,12 +90,15 @@ Three behaviors get re-wired per template; keep the same shape each time:
 4. **Per-card PNG export** — one `.export-btn` per `.card`, added via JS
    (`document.querySelectorAll('.card').forEach(...)`) rather than hand-
    written per section, so a new template gets it for free just by using the
-   `.card` class. Lazy-loads `html2canvas` from a CDN on first click (not
-   bundled inline, so the file still opens instantly before anyone exports
-   anything), toggles a `body.exporting` class that hides all editing chrome
-   (`display: none !important` on nav/info/photo-edit/export buttons, the
-   progress gauge, low-res badges) so the captured PNG is clean, then
-   downloads `majalah-<section-slug>.png`. Wrap the whole thing in
+   `.card` class. It defaults to a floating top-left corner button; on a card
+   with an `.overlay-head` it is inserted into that grid instead (see the
+   stacking traps under photo upload) — placed after the eyebrow row so DOM
+   order matches what's on screen. Lazy-loads `html2canvas` from a CDN on
+   first click (not bundled inline, so the file still opens instantly before
+   anyone exports anything), toggles a `body.exporting` class that hides all
+   editing chrome (`display: none !important` on nav/info/photo-edit/export
+   buttons, the progress gauge, low-res badges) so the captured PNG is clean,
+   then downloads `majalah-<section-slug>.png`. Wrap the whole thing in
    try/catch/finally — a blocked or offline CDN load must fail with a plain
    alert and reset the button, not hang or throw. This satisfies the spec's
    "each page also doubles as a social asset" requirement (§7).
@@ -120,10 +125,6 @@ template introduces a new kind of slot.
 ## Still open / not yet solved by any template
 
 - Blank-vs-filled-instance protection beyond a written warning (see above).
-- The per-card `.export-btn` (top-left, `z-index: 20`) overlaps the start of
-  the `.top-row` eyebrow text on the two hero cards. Cosmetic only — the text
-  it covers is static, and the button is hidden during export — but it's the
-  same corner collision as the `.photo-edit-btn` one above, not yet resolved.
 - TOC section labels and the "01 / 12" profile index counter are still
   static, not editable.
 - Multi-card pagination for long-form content (`FEATURE_SPREAD`) — spec §3a.
