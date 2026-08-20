@@ -27,7 +27,7 @@ This is not a CMS and not a general page builder. It's deliberately narrow: a gr
 
 ## 3. Architecture recommendation
 
-Jadwal Seragam was 1 page, 7 tiles — vanilla HTML/CSS/JS was fine as one file. A magazine with 8–20 pages across ~9 reusable template *types* will get unwieldy fast if every page is hand-coded.
+Jadwal Seragam was 1 page, 7 tiles — vanilla HTML/CSS/JS was fine as one file. A magazine with 8–20 pages across ~11 reusable template *types* will get unwieldy fast if every page is hand-coded.
 
 **Recommendation:** stay vanilla JS (no React/build step — matches your current stack and skill trajectory), but structure it as a **template registry**:
 
@@ -35,7 +35,7 @@ Jadwal Seragam was 1 page, 7 tiles — vanilla HTML/CSS/JS was fine as one file.
 templates = {
   COVER: { render: fn, slots: [...] },
   TOC: { render: fn, slots: [...] },
-  PROFILE_GRID: { render: fn, slots: [...] },
+  PROFILE_SPOTLIGHT: { render: fn, slots: [...] },
   ...
 }
 ```
@@ -50,7 +50,7 @@ Since it's solo-editor and web-only, there's no need for a backend — this stay
 
 Mobile-first, and each page also needs to work as a standalone social asset — so every page/section is a fixed 9:16 card (Stories/Reels proportions), not a free-flowing full-width page. On mobile it fills the screen; on desktop it centers as a tall column with the graph-paper background showing on either side, same as viewing a Story in a browser. Navigation between cards is vertical scroll-snap, one card at a time, jumpable via the floating menu.
 
-**Consequence for future templates**: a 9:16 card holds noticeably less than a full page. Longer content — `FEATURE_SPREAD` interviews, `PROFILE_GRID` bios with real bio text — will likely need to paginate across 2+ cards rather than fit on one, the way an Instagram carousel splits a long caption across slides. Worth designing for that in Stage 2 rather than discovering it mid-build.
+**Consequence for future templates**: a 9:16 card holds noticeably less than a full page. Longer content — `FEATURE_SPREAD` interviews, `PROFILE_SPOTLIGHT` bios with real bio text — will likely need to paginate across 2+ cards rather than fit on one, the way an Instagram carousel splits a long caption across slides. Worth designing for that in Stage 2 rather than discovering it mid-build. Partly resolved already: see the browse → detail pair at the end of §4.
 
 ## 4. Page template taxonomy
 
@@ -110,11 +110,55 @@ No print pipeline — confirmed web-only. Two separate export needs instead:
 
 ## 8. Staged build plan
 
-1. **Stage 1** — Template registry + slot config for 3 templates (`COVER`, `TOC`, `PHOTO_COLLAGE`). Smallest set that proves upload → crop → render → per-section PNG export end to end, built directly off the Jadwal Seragam codebase.
-2. **Stage 2** — Add the remaining templates (`PROFILE_GRID`, `GROUP_PHOTO`, `FEATURE_SPREAD`, `EDITOR_NOTE`, `QUOTE_INTERLUDE`, `BACK_COVER`, `VIDEO_FEATURE`), including the video embed slot. Treat this as exploratory rather than a fixed checklist — add layouts as you find you want them, going back and forth on each one rather than speccing all nine up front.
-3. **Stage 3** — Page management shell: add/remove/reorder pages, assign a template per page, whole-magazine HTML export.
-4. **Stage 4** — Polish pass: scroll navigation/anchors, per-section PNG export for social, mobile responsiveness (assume most readers are on a phone).
-5. **Stage 5 (ongoing)** — Keep expanding the template library as new content types come up — "as many layouts as possible" is the actual goal here, not a fixed set.
+**The build has not followed this order.** Stage 1's template registry is still
+not code, while templates from Stage 2 and the whole of Stage 4 have shipped.
+Each stage below records what is actually done, so the plan can be read against
+the repo rather than against intent. Template IDs here match the §4 taxonomy —
+an earlier draft of this list referred to a `PROFILE_GRID` that §4 has since
+split into `SUBJECT_DIRECTORY` + `PROFILE_SPOTLIGHT`.
+
+1. **Stage 1** — Template registry + slot config for 3 templates (`COVER`, `TOC`,
+   `PHOTO_COLLAGE`). Smallest set that proves upload → crop → render →
+   per-section PNG export end to end, built directly off the Jadwal Seragam
+   codebase.
+   → *Partial.* All three templates exist and work end to end, but as hand-built
+   sections in one file. The registry and slot config they were meant to prove
+   are not written yet, so this stage's actual deliverable is still open.
+
+2. **Stage 2** — Add the remaining templates (`SUBJECT_DIRECTORY`,
+   `PROFILE_SPOTLIGHT`, `GROUP_PHOTO`, `FEATURE_SPREAD`, `EDITOR_NOTE`,
+   `QUOTE_INTERLUDE`, `BACK_COVER`, `VIDEO_FEATURE`), including the video embed
+   slot. Treat this as exploratory rather than a fixed checklist — add layouts as
+   you find you want them, going back and forth on each one rather than speccing
+   all of them up front.
+   → *3 of 8 done.* `SUBJECT_DIRECTORY`, `PROFILE_SPOTLIGHT` and `VIDEO_FEATURE`
+   are built (the video embed slot with them). Still to build: `GROUP_PHOTO`,
+   `FEATURE_SPREAD`, `EDITOR_NOTE`, `QUOTE_INTERLUDE`, `BACK_COVER`.
+
+3. **Stage 3** — Page management shell: add/remove/reorder pages, assign a
+   template per page, whole-magazine HTML export.
+   → *Not started, and the least specified stage in this document.* One clause
+   is not a design. Before building it, this stage needs: where page state
+   lives and how it survives a reload (the tool has no persistence today), what
+   happens to uploaded photos and typed text when a page is deleted, and how the
+   `TOC` card stays in sync as pages are added, removed, or reordered.
+
+4. **Stage 4** — Polish pass: scroll navigation/anchors, per-section PNG export
+   for social, mobile responsiveness (assume most readers are on a phone).
+   → *Done, ahead of Stages 1 and 3.* Scroll-snap navigation with a floating
+   jump menu, per-card PNG export via html2canvas, and 9:16 mobile-first cards
+   are all shipped.
+
+5. **Stage 5 (ongoing)** — Keep expanding the template library as new content
+   types come up — "as many layouts as possible" is the actual goal here, not a
+   fixed set.
+   → *Ongoing.* 6 of the 11 templates in §4 are built.
+
+**Reading the order.** Building the polish before the registry was cheap while
+every page was hand-written, but it front-loaded the work that has to be redone
+once Stage 1 lands: each shipped template becomes a registry entry, and the
+per-card behaviors currently re-wired by hand per file become slot config. The
+longer Stage 1 waits, the more hand-built templates there are to convert.
 
 ---
 
