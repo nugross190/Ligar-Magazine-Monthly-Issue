@@ -1,11 +1,18 @@
 # Shared conventions for templates
 
-Every shipped template must stay a **single standalone HTML file** — all CSS
-and JS inlined, no build step, openable by double-clicking. So this folder is
-not imported code; it's a reference to copy from when building the next
-template, so the same patterns don't get re-derived (or drift) each round.
+> **Era note:** these conventions were written for the hand-built-template era
+> (`../majalah_functional_v1.html`, one standalone file per template). The deck
+> tool at the repo root (`../../index.html`) has since absorbed that template's
+> six sections into its `TEMPLATES` registry — new layouts are added there as
+> registry entries, not as new standalone files. The *card-design* conventions
+> below (tokens, 9:16 shell, slot behaviors, stacking traps) still describe how
+> every card should be built; the *file* conventions (one HTML file per
+> template, Save-As discipline) are retired.
+
 Canonical, working implementation of everything below lives in
-`../majalah_functional_v1.html` — read that file for the real code.
+`../../index.html` — the registry's render functions are the current form of
+these patterns; `../majalah_functional_v1.html` is the historical standalone
+form.
 
 ## Design tokens (CSS custom properties)
 
@@ -105,13 +112,11 @@ Three behaviors get re-wired per template; keep the same shape each time:
 
 ## Blank template vs. filled instance
 
-There's no tooling yet to protect the reusable blank template from being
-overwritten by whoever fills it in — the current mitigation is a written
-warning in both the file's header comment and the in-page "Cara Pakai"
-panel: duplicate the file (Save As) before typing anything in. If this
-becomes a real problem in practice (someone forgets, loses the blank), the
-next step would be a "Reset to blank" control rather than relying on
-discipline — not built yet, flagged here so it isn't lost.
+**Solved by the deck tool.** The tool is an app; an issue is a saved document
+(IndexedDB autosave + `.json` project file). Blank template and filled
+instance separate by construction — PowerPoint's template-vs-deck split — so
+the old mitigation (a written "duplicate the file before typing" warning) is
+retired along with the standalone-file workflow it protected.
 
 ## Floating chrome
 
@@ -122,11 +127,12 @@ panel — this is what makes the file usable by someone who isn't you).
 Every new template should keep the info panel and update its steps if the
 template introduces a new kind of slot.
 
-## Still open / not yet solved by any template
+## Still open
 
-- Blank-vs-filled-instance protection beyond a written warning (see above).
-- TOC section labels and the "01 / 12" profile index counter are still
-  static, not editable.
-- Multi-card pagination for long-form content (`FEATURE_SPREAD`) — spec §3a.
-- Whole-magazine page management shell (add/remove/reorder pages) — spec §8,
-  Stage 3.
+- Multi-card pagination for long-form content (`FEATURE_SPREAD` interviews
+  longer than one card) — spec §3a.
+- Aspect-ratio pre-cropping at upload time (spec §5 mentions the Jadwal
+  Seragam pre-crop discipline; the tool currently uses CSS `cover` cropping,
+  which is fine on screen but crops without asking).
+- HEIC uploads (spec §5 mentions heic2any) — currently whatever
+  `<input accept="image/*">` + canvas can decode.

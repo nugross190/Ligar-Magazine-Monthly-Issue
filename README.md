@@ -1,40 +1,71 @@
 # Ligar Magazine — Monthly Issue
 
-A browser-based, template-driven tool for building a school magazine (SMAN 5 Garut) as a web-native, mobile-first publication — not a print layout. Solo-editor, no backend: drop content into predefined slots (photo/text/video) and export.
+A browser-based, template-driven tool for building a school magazine (SMAN 5
+Garut) as a web-native, mobile-first publication — not a print layout.
+Solo-editor, no backend, no install.
+
+## How to use
+
+**Open `index.html` in a browser. That's the whole setup.**
+
+The tool works like PowerPoint: a new issue starts as a single cover page, and
+you grow it by pressing **⊞ → + Tambah Halaman** and picking a layout from the
+library (11 layouts). Fill each page in place — click a dashed area to upload a
+photo (auto-compressed, low-res warning), click text to type (hard character
+limits), paste a YouTube link into a video slot. Pages can be renamed,
+reordered, and deleted (with undo); the **Daftar Isi page builds itself** from
+the page list.
+
+Everything **autosaves in the browser** (IndexedDB). For backup or moving
+between computers use *Simpan Berkas Proyek* (a `.json` file) and *Buka
+Proyek…* — which also accepts a previously exported magazine HTML, since the
+project data is embedded in it.
+
+Two exports, matching the spec's §7:
+
+- **Unduh Majalah** — the whole issue as one self-contained HTML file
+  (scroll-snap reader, jump menu, video embeds) you can host anywhere or share
+  directly.
+- **Per-card PNG** (download icon on each card) — each 9:16 page doubles as a
+  social media asset. Needs internet on first use (html2canvas from CDN).
 
 ## Contents
 
-- `docs/majalah_sekolah_layout_spec.md` — Layout system spec (draft v0.2): concept, architecture, template taxonomy, slot system, export plan, staged build roadmap.
-- `prototypes/` — Visual-only mockups (round 1 of a template: matches the reference, nothing is fillable yet).
-- `templates/` — Functional, standalone templates another teacher can actually open and fill in (real photo upload, editable text, video embed). `templates/_shared/README.md` documents the conventions reused across all of them.
+- `index.html` — **the deck tool** (editor + exporter). Single file, vanilla
+  JS, template registry inside.
+- `docs/majalah_sekolah_layout_spec.md` — Layout system spec (draft v0.4):
+  concept, PowerPoint authoring model, template taxonomy, slot system,
+  persistence, staged build plan (all stages shipped; Stage 5 ongoing).
+- `templates/` — the hand-built-era functional template
+  (`majalah_functional_v1.html`), kept as the round-2 reference the app grew
+  out of. `templates/_shared/README.md` documents the card conventions, which
+  still apply to new registry entries.
+- `prototypes/` — round-1 visual-only mockup, kept for history.
 
 ## Format
 
-Every page is a fixed 9:16 story card (Stories/Reels proportions) navigated via vertical scroll-snap, so each card also works standalone as an exportable social asset.
+Every page is a fixed 9:16 story card (Stories/Reels proportions) navigated via
+vertical scroll-snap, so each card also works standalone as an exportable
+social asset.
 
-## Template registry
+## Template library (11)
 
-| File | Templates covered | Status | Notes |
-|---|---|---|---|
-| `prototypes/majalah_prototype_v2_profile_guru.html` | COVER, TOC, PHOTO_COLLAGE, VIDEO_FEATURE, SUBJECT_DIRECTORY, PROFILE_SPOTLIGHT | Visual mockup (round 1) | Superseded by the functional version below; kept as the round-1 reference. |
-| `templates/majalah_functional_v1.html` | COVER, TOC, PHOTO_COLLAGE, VIDEO_FEATURE, SUBJECT_DIRECTORY, PROFILE_SPOTLIGHT | **Functional** (round 2) | Click-to-upload photos (auto-compressed, low-res warning), click-to-edit text (hard character limits), paste-a-link YouTube embed, and now a per-card "unduh PNG" button for social posting. Blank-vs-filled-instance is a written warning only, not enforced in code yet. |
+`COVER` · `TOC` (derived) · `EDITOR_NOTE` · `PHOTO_COLLAGE` · `FEATURE_SPREAD`
+· `VIDEO_FEATURE` · `SUBJECT_DIRECTORY` · `PROFILE_SPOTLIGHT` (auto-numbered)
+· `GROUP_PHOTO` · `QUOTE_INTERLUDE` · `BACK_COVER`
+
+Adding a layout = one entry in the `TEMPLATES` registry in `index.html`
+(slot definitions + a render function that serves both the editor and the
+exported reader + a picker thumbnail).
 
 ## Status
 
-Six of the spec's eleven templates are built and functionally usable end to end
-— upload → edit → embed → export — plus the §7 per-card PNG export for social.
+All build stages of the spec are shipped: the template registry and page shell
+(Stage 1), the full 11-template library (Stage 2), whole-magazine HTML export
+(Stage 3), and the polish pass (Stage 4, which historically shipped first).
+Stage 5 — growing the layout library — is the ongoing work.
 
-Against the staged plan in §8, though, the build has run out of order: what
-ships is **Stage 4** (polish — scroll navigation, PNG export, mobile-first
-cards) plus 6 templates' worth of **Stage 2**. **Stage 1 has not started.**
-Each template is still a hand-built section in one file, so the template
-registry and slot config that Stage 1 exists to deliver are not written, and
-neither is the page shell that makes the tool PowerPoint-shaped — an issue
-opening on a cover and growing by "add page → pick layout" (§1, §6a). That
-shell is now the critical path, and every hand-built template added before it
-is one more to convert afterwards.
-
-Also not built: any persistence at all — a reload loses every upload and edit,
-which §6b marks as a precondition of the deck model rather than a polish item.
-Enforced blank-template protection is still a written warning only, and the TOC
-and profile-index labels are still static rather than derived from a page list.
+The old warnings no longer apply: work persists across reloads (autosave), and
+the blank-template-vs-filled-instance problem is gone by construction — the
+tool is the app, an issue is a saved document, the same split as PowerPoint's
+template vs deck.

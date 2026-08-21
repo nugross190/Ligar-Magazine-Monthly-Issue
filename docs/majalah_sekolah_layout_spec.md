@@ -1,7 +1,7 @@
-# Majalah Sekolah — Layout System Spec (Draft v0.3)
+# Majalah Sekolah — Layout System Spec (Draft v0.4)
 **SMAN 5 Garut**
 
-Status: draft v0.3 — solo-editor, web-native (not print), and PowerPoint-style authoring (§1, §6a) confirmed. Push back on the rest.
+Status: draft v0.4 — the deck tool (`index.html`) is built: Stages 1–4 shipped, all 11 templates in the registry. The spec now describes a working product; §9 tracks what stays open.
 Precedent: this extends the **Jadwal Seragam Banner** pattern (fixed slots → upload/pre-crop → export) from one bento page to a growing library of page layouts.
 
 ---
@@ -143,12 +143,12 @@ The state itself is small and already well-shaped: the page list of
 awkward part — they are held as base64 data URLs, so a dozen of them comfortably
 exceed `localStorage`'s ~5MB quota. Any mechanism has to account for that.
 
-Recommended: autosave the page list to **IndexedDB** (no practical quota problem
-at this scale) on every slot edit, restoring on open. The alternative is explicit
-save/load of a `.json` project file — portable between machines and backup-able,
-at the cost of more UI and no protection against forgetting to save. These are
-not exclusive, and autosave plus import/export of the same JSON is a reasonable
-end state. Recorded as an open decision in §9 rather than settled here.
+**Resolved — both, as built in `index.html`:** the page list autosaves to
+IndexedDB (debounced, on every slot edit) and restores on open, and the same
+JSON can be exported/imported as a `.json` project file for backup or moving
+between machines. A third recovery path came for free: the exported magazine
+HTML embeds the project JSON, so a published issue can be reopened as a project
+even if the `.json` is lost.
 
 **Side effect worth having:** this resolves the blank-template-vs-filled-instance
 problem that `templates/_shared/README.md` currently mitigates with a written
@@ -171,69 +171,44 @@ No print pipeline — confirmed web-only. Two separate export needs instead:
 
 ## 8. Staged build plan
 
-**Reordered for the deck model (§1, §6a).** The page shell used to sit at Stage 3,
-behind the template library. That ordering does not survive the PowerPoint
-framing: "start with a cover and add pages as you like" *is* the shell, so it
-cannot be the last thing built. It now merges into Stage 1, which is where it
-belonged anyway — the template registry and the page list are one architecture,
-and building the registry without the list just defers the same work.
+**All build stages are shipped as of `index.html` (the deck tool).** The stage
+list below is kept as the record of what each stage meant and how the build
+actually ran — polish first, core last — rather than as a to-do list. Stage 5
+is the only ongoing one.
 
-**The build so far has not followed any of this.** Stage 4 shipped first, while
-Stage 1 is still not started. Each stage records what is actually done, so the
-plan reads against the repo rather than against intent. Template IDs match the
-§4 taxonomy — an earlier draft referred to a `PROFILE_GRID` that §4 has since
-split into `SUBJECT_DIRECTORY` + `PROFILE_SPOTLIGHT`.
+1. **Stage 1 — Deck core.** Template registry + slot config
+   (`{ id, type, aspectRatio?, maxChars?, required }` per §5), page list state
+   (`[{ templateId, slotData }]`, opening on a `COVER`), the page shell
+   (add via layout picker, remove with undo, reorder; `TOC` derived per §6a),
+   and persistence per §6b.
+   → *Done.* `index.html` is the registry: one `TEMPLATES` entry per layout,
+   one render function serving both the editor and the exported reader.
 
-1. **Stage 1 — Deck core.** The stage that makes the tool PowerPoint-shaped, and
-   now the critical path. Four pieces, one architecture:
-   - Template registry + slot config (`{ id, type, aspectRatio?, maxChars?, required }`
-     per §5), with the six shipped templates converted into registry entries.
-   - Page list state — an issue is `[{ templateId, slotData }]`, opening with one
-     `COVER`.
-   - Page shell — add (via layout picker), remove, reorder; `TOC` derived from
-     the list per §6a.
-   - Persistence, mechanism per §6b once decided.
-
-   → *Not started.* Formerly Stage 1 (registry) plus Stage 3 (shell), split
-   across the plan; merged here because neither half is useful alone.
-
-2. **Stage 2 — Fill out the library.** The five templates not yet built:
-   `GROUP_PHOTO`, `FEATURE_SPREAD`, `EDITOR_NOTE`, `QUOTE_INTERLUDE`,
-   `BACK_COVER`. Treat this as exploratory rather than a fixed checklist — add
-   layouts as you find you want them, going back and forth on each one rather
-   than speccing all of them up front. Cheap once Stage 1 lands: each new layout
-   is a registry entry, not a hand-built file.
-
-   → *6 of 11 templates built* — `COVER`, `TOC`, `PHOTO_COLLAGE`,
-   `VIDEO_FEATURE`, `SUBJECT_DIRECTORY`, `PROFILE_SPOTLIGHT`, all hand-written
-   rather than registry-driven.
+2. **Stage 2 — Fill out the library.** The remaining templates beyond the
+   first batch.
+   → *Done — 11 of 11.* `COVER`, `TOC`, `EDITOR_NOTE`, `PHOTO_COLLAGE`,
+   `FEATURE_SPREAD`, `VIDEO_FEATURE`, `SUBJECT_DIRECTORY`, `PROFILE_SPOTLIGHT`,
+   `GROUP_PHOTO`, `QUOTE_INTERLUDE`, `BACK_COVER`.
 
 3. **Stage 3 — Whole-magazine export.** One self-contained HTML file per §7,
-   generated from the page list. Independent of the shell, so it can follow the
-   library.
-
-   → *Not started.* Per-card PNG export (also §7) already ships; this is the
-   other half.
+   generated from the page list.
+   → *Done.* "Unduh Majalah" produces a standalone reader file (scroll-snap,
+   jump menu, video embeds, photos inline) with the project JSON embedded for
+   recovery.
 
 4. **Stage 4 — Polish pass.** Scroll navigation/anchors, per-section PNG export
-   for social, mobile responsiveness (assume most readers are on a phone).
-
-   → *Done, ahead of everything else.* Scroll-snap navigation with a floating
-   jump menu, per-card PNG export via html2canvas, and 9:16 mobile-first cards
-   all ship today.
+   for social, mobile responsiveness.
+   → *Done* (shipped first, historically — in the hand-built template era).
 
 5. **Stage 5 (ongoing)** — Keep expanding the template library as new content
-   types come up — "as many layouts as possible" is the actual goal here, not a
-   fixed set.
+   types come up — "as many layouts as possible" is the actual goal. Adding a
+   layout is now one `TEMPLATES` registry entry (slots + render function + a
+   picker thumbnail), not a hand-built file.
 
-   → *Ongoing*, and the stage the deck model is ultimately in service of.
-
-**Reading the order.** Building the polish first was cheap while every page was
-hand-written, but it front-loaded work that Stage 1 will redo: each shipped
-template becomes a registry entry, and the per-card behaviors currently re-wired
-by hand in every file become slot config. The longer Stage 1 waits, the more
-hand-built templates there are to convert — which is the concrete argument for
-doing it next rather than adding a seventh template first.
+**How the build actually ran:** Stage 4 shipped first (in
+`templates/majalah_functional_v1.html`, the hand-built era), then Stages 1–3
+landed together as `index.html`. The six hand-built-era templates were
+converted into registry entries during Stage 1, as predicted.
 
 ---
 
@@ -244,5 +219,5 @@ doing it next rather than adding a seventh template first.
 - [x] ~~Navigation~~ → continuous scroll + floating icon that expands to a jump menu, confirmed
 - [x] ~~Video hosting~~ → YouTube (embed mode), confirmed
 - [x] ~~Authoring model~~ → PowerPoint-style: an issue opens on a `COVER`, pages are added by picking a layout, removed and reordered freely, confirmed (§1, §6a)
-- [ ] **Deck persistence mechanism** — IndexedDB autosave, an explicit `.json` project file, or both. Required either way once the deck model is real; §6b carries the recommendation and the reason `localStorage` is not a candidate
+- [x] ~~Deck persistence mechanism~~ → both: IndexedDB autosave + `.json` project file, plus recovery from the exported HTML itself (§6b), confirmed
 - [ ] How many layouts before you start actually publishing — open-ended, treating this as ongoing exploration rather than a fixed target (see the Stage 2 note in §8)
