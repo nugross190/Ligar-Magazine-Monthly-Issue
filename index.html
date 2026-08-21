@@ -177,6 +177,45 @@
   .slot.has-video { cursor: default; border: none; background: #000; padding: 0; }
   .slot.has-video iframe { width: 100%; height: 100%; border: 0; display: block; }
 
+  /* Foto hero tampil utuh (contain), pita sisanya diisi salinan buram foto yang
+     sama — tidak ada lagi bagian foto yang terpotong bingkai 9:16. */
+  .slot--fit { background: #14171F; overflow: hidden; }
+  .slot--fit .fit-blur {
+    position: absolute; inset: 0;
+    background-size: cover; background-position: center;
+    filter: blur(22px) brightness(0.72) saturate(1.05);
+    transform: scale(1.15);
+  }
+  .slot--fit .fit-pic {
+    position: absolute; inset: 0;
+    background-size: contain; background-position: center; background-repeat: no-repeat;
+  }
+
+  /* Kartu video "lite": thumbnail + tombol putar. YouTube menolak embed dari
+     halaman tanpa referrer (Error 153) — dan file yang dibuka dobel-klik
+     (file://) selalu tanpa referrer. Maka bawaannya kartu tautan; pembaca yang
+     dibuka lewat http(s) meng-upgrade sendiri jadi iframe (lihat READER_JS). */
+  a.yt-lite { display: flex; }
+  .yt-lite { text-decoration: none; }
+  .yt-lite .yt-thumb {
+    position: absolute; inset: 0;
+    background-size: cover; background-position: center;
+    background-color: #14171F; opacity: 0.85;
+  }
+  .yt-lite .yt-play {
+    position: relative; z-index: 2;
+    width: 3.4rem; height: 3.4rem; border-radius: 50%;
+    background: rgba(20,23,31,0.85); border: 1px solid rgba(255,255,255,0.45);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 1.05rem; padding-left: 4px;
+  }
+  .yt-lite .yt-hint {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    bottom: 0.6rem; z-index: 2;
+    font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.05em;
+    color: rgba(255,255,255,0.85);
+  }
+
   /* Teks placeholder pada slot yang belum diisi (mode baca). */
   .ph-empty { opacity: 0.5; font-style: italic; }
 
@@ -408,6 +447,9 @@
   .slot.has-image[data-up]:hover::before { opacity: 1; }
 
   .low-res-badge {
+    /* Penanda saja, bukan sasaran klik — di sampul ia menumpang di atas teks
+       edisi dan tanpa ini menelan kliknya (keluarga tabrakan pojok lagi). */
+    pointer-events: none;
     position: absolute; top: 0.5rem; right: 0.5rem;
     background: var(--amber); color: var(--ink);
     font-family: var(--font-mono); font-size: 0.6rem;
@@ -719,7 +761,7 @@
   <strong>Cara Pakai</strong>
   <ol>
     <li>Tombol <b>⊞ kanan bawah</b> membuka daftar halaman: tambah halaman baru (pilih layout), ubah urutan (↑↓), ganti nama, atau hapus.</li>
-    <li>Isi halaman langsung di kartunya: klik <b>area bergaris putus-putus</b> untuk foto, klik <b>teks</b> untuk mengetik (contoh dalam [kurung] hilang otomatis), klik <b>area video</b> untuk menempel tautan YouTube.</li>
+    <li>Isi halaman langsung di kartunya: klik <b>area bergaris putus-putus</b> untuk foto, klik <b>teks</b> untuk mengetik (contoh dalam [kurung] hilang otomatis), klik <b>area video</b> untuk menempel tautan YouTube. Video tampil sebagai kartu tombol-putar; kalau majalah dipasang di internet (situs sekolah, GitHub Pages), video langsung diputar di halamannya.</li>
     <li><b>Daftar Isi menyusun dirinya sendiri</b> dari daftar halaman — ganti nama halaman di panel untuk mengubah judul di Daftar Isi.</li>
     <li>Semua <b>tersimpan otomatis</b> di browser ini. Untuk cadangan atau pindah komputer: <b>Simpan Berkas Proyek</b>, lalu <b>Buka Proyek…</b> di tempat lain.</li>
     <li>Selesai? <b>Unduh Majalah</b> menghasilkan satu file HTML siap dibagikan. Ikon unduh di tiap kartu menyimpan kartu itu sebagai <b>PNG</b> untuk medsos (perlu internet saat pertama dipakai).</li>
@@ -761,22 +803,37 @@ function IMG(page, id, mode, opt) {
   // Slot foto. opt: { label, cls, maxDim, q, hero }
   const val = page.slots[id];
   const has = val && val.d;
-  const style = has ? ` style="background-image:url(&quot;${val.d}&quot;)"` : '';
   const badge = (mode === 'edit' && has && val.lr) ? '<span class="low-res-badge">RESOLUSI RENDAH</span>' : '';
   const up = (mode === 'edit' && !opt.hero) ? ` data-up="1"` : '';
+  const hero = (mode === 'edit' && opt.hero) ? ' data-hero="1"' : '';
   const dataRef = mode === 'edit' ? ` data-p="${page.id}" data-s="${id}" data-dim="${opt.maxDim}" data-q="${opt.q}"` : '';
+  if (has && opt.hero) {
+    // Hero: foto utuh (contain) di atas latar buram dari foto yang sama —
+    // tidak ada yang terpotong, pita kosong tetap terlihat disengaja.
+    const bg = `background-image:url(&quot;${val.d}&quot;)`;
+    return `<div class="slot has-image slot--fit ${opt.cls || ''}"${hero}${dataRef}><div class="fit-blur" style="${bg}"></div><div class="fit-pic" style="${bg}"></div>${badge}</div>`;
+  }
+  const style = has ? ` style="background-image:url(&quot;${val.d}&quot;)"` : '';
   const inner = has ? badge : `${ICON_IMG}<span>${esc(opt.label)}</span>`;
-  return `<div class="slot${has ? ' has-image' : ''} ${opt.cls || ''}"${up}${dataRef}${style}>${inner}</div>`;
+  return `<div class="slot${has ? ' has-image' : ''} ${opt.cls || ''}"${up}${hero}${dataRef}${style}>${inner}</div>`;
 }
 
 function VID(page, id, mode, opt) {
-  // Slot video YouTube (embed saja — spec §5).
+  // Slot video YouTube. Ditampilkan sebagai kartu "lite" (thumbnail + tombol
+  // putar), BUKAN iframe: YouTube menolak embed dari halaman tanpa referrer
+  // dengan Error 153, dan halaman yang dibuka dobel-klik (file://) selalu
+  // tanpa referrer. Kartu lite bekerja di mana pun; pembaca hasil ekspor yang
+  // dibuka lewat http(s) otomatis menukarnya jadi iframe (READER_JS). Bonus:
+  // ekspor PNG kartu video kini menampilkan thumbnail, bukan kotak kosong
+  // (html2canvas memang tidak bisa memotret isi iframe lintas situs).
   const val = page.slots[id];
   if (val && val.yt) {
-    const reset = mode === 'edit'
-      ? `<button type="button" class="photo-edit-btn vid-reset" data-vidreset="1" data-p="${page.id}" data-s="${id}">${ICON_VID} Ganti Video</button>`
-      : '';
-    return `<div class="slot has-video ${opt.cls || ''}"${mode === 'edit' ? ` data-p="${page.id}" data-s="${id}"` : ''}><iframe src="https://www.youtube.com/embed/${esc(val.yt)}" title="Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>${reset}</div>`;
+    const yt = esc(val.yt);
+    const inner = `<div class="yt-thumb" style="background-image:url('https://i.ytimg.com/vi/${yt}/hqdefault.jpg')"></div><span class="yt-play">&#9654;</span><span class="yt-hint">TONTON DI YOUTUBE</span>`;
+    if (mode === 'edit') {
+      return `<div class="slot has-video yt-lite ${opt.cls || ''}" data-yt="${yt}" data-p="${page.id}" data-s="${id}">${inner}<button type="button" class="photo-edit-btn vid-reset" data-vidreset="1" data-p="${page.id}" data-s="${id}">${ICON_VID} Ganti Video</button></div>`;
+    }
+    return `<a class="slot has-video yt-lite ${opt.cls || ''}" data-yt="${yt}" href="https://www.youtube.com/watch?v=${yt}" target="_blank" rel="noopener">${inner}</a>`;
   }
   const attrs = mode === 'edit' ? ` data-vid="1" data-p="${page.id}" data-s="${id}"` : '';
   return `<div class="slot ${opt.cls || ''}"${attrs}>${ICON_VID}<span>${mode === 'edit' ? '+ TEMPEL TAUTAN YOUTUBE' : '(video belum dipasang)'}</span></div>`;
@@ -1367,8 +1424,13 @@ fileInput.addEventListener('change', async () => {
     const page = state.pages.find(p => p.id === ref.pageId);
     if (!page) return;
     page.slots[ref.slotId] = { d: dataUrl, lr: lowRes };
-    // Perbarui slot di tempat — tanpa render ulang penuh, posisi baca tak lompat.
     const slotEl = document.querySelector(`#deck .slot[data-p="${ref.pageId}"][data-s="${ref.slotId}"]`);
+    if (slotEl && slotEl.dataset.hero) {
+      // Slot hero butuh markup berlapis (contain + latar buram) — lewat render
+      // ulang biasa saja; tinggi kartu tetap, posisi baca tidak lompat.
+      renderDeck();
+      return;
+    }
     if (slotEl) {
       slotEl.classList.add('has-image');
       slotEl.style.backgroundImage = `url("${dataUrl}")`;
@@ -1698,6 +1760,18 @@ function magazineTitle() {
 }
 
 const READER_JS = `
+  // Dibuka lewat http(s) (situs sekolah, GitHub Pages): kartu video lite
+  // ditukar jadi pemutar inline. Lewat file:// dibiarkan sebagai tautan —
+  // YouTube menolak embed tanpa referrer (Error 153).
+  if (location.protocol === 'http:' || location.protocol === 'https:') {
+    [].slice.call(document.querySelectorAll('.yt-lite[data-yt]')).forEach(function (lite) {
+      var wrap = document.createElement('div');
+      wrap.className = lite.className.replace('yt-lite', '').trim();
+      wrap.innerHTML = '<iframe src="https://www.youtube.com/embed/' + lite.dataset.yt +
+        '" title="Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>';
+      lite.replaceWith(wrap);
+    });
+  }
   var pages = [].slice.call(document.querySelectorAll('[data-nav]')).map(function (el, i) {
     return { id: el.id, label: el.dataset.nav, num: String(i + 1).padStart(2, '0') };
   });

@@ -101,7 +101,13 @@ Each slot is defined as:
 - **Image slots**: lock aspect ratio at upload time (same pre-crop discipline as Jadwal Seragam's 4:6/1:1 tiles). Accept jpg/png/heic (heic2any, same CDN dependency you already planned). Auto-compress before canvas render so export doesn't choke on 12MP phone photos.
 - **Text slots**: enforce `maxChars` in the input UI itself, not just visually — so nobody's caption silently overflows the slot.
 - **Video slots**: two modes, since this is a solo-editor, no-backend tool:
-  - **Embed mode** — paste a YouTube/Instagram/Drive share link, rendered via `<iframe>`. No file-size concerns, works reliably once published.
+  - **Embed mode** — paste a YouTube link. *Amended (v0.4.1):* rendered as a
+    thumbnail "lite card" that links out to YouTube, not as a direct
+    `<iframe>` — YouTube rejects embeds from pages that send no referrer
+    (player Error 153), and a magazine opened by double-click (`file://`)
+    always sends none. The exported reader upgrades lite cards to real inline
+    iframes automatically when it detects it is being served over http(s)
+    (school site, GitHub Pages), so hosted issues still play in place.
   - **File mode** — reference a video hosted somewhere you control. Don't embed raw video as base64 inside the exported HTML — a couple of 30-second clips at base64 turns a "single file" export into hundreds of MB and it won't load reliably in a browser.
   Default to embed mode; only use file mode if you already have hosting sorted.
 - Flag low-resolution uploads (e.g. under ~1000px) at upload time, not after export — a phone photo that looks fine on screen can be too soft printed on an A4 page.
