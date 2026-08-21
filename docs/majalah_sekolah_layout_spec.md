@@ -173,6 +173,35 @@ No print pipeline — confirmed web-only. Two separate export needs instead:
 - **Individual assets for social** → since you're generating these as head of social media, each page/section should also be independently exportable as a PNG via html2canvas, scoped to just that section's DOM node. A "Teacher Profile" page then doubles as an Instagram post without rebuilding it separately.
 - **Navigation model (settled — see §9)** — continuous scroll through sections won over click/swipe flipbook paging: simpler, more native to the web, and it doesn't fight with video embeds the way a flip transition can. Flipbook would have been closer to the print-magazine feel of the references, at more JS. Shipped as scroll-snap plus a floating jump menu.
 
+### 7a. Public archive (v0.4.2)
+
+"Host anywhere" above covers a single issue; it didn't say how a *reader*
+finds any given issue, or how a new one goes live without hand-editing a
+list somewhere. Resolved as three pieces, all shipped:
+
+- **`editor.html`** — the deck tool itself (what used to be `index.html`).
+  Unchanged in behavior; only its filename and its role relative to the site
+  changed, since the root URL now belongs to readers, not editors.
+- **`issues/`** — where a published issue's exported HTML lives. Naming
+  convention `YYYY-MM-slug.html`, documented in `issues/README.md`;
+  **Unduh Majalah** already produces a filename in that shape, so publishing
+  is unzip-free: download, drop the file in `issues/`, commit, push.
+- **`index.html`** — a public archive page, now the site's front door. It
+  discovers issues by querying the GitHub Contents API for `issues/` at load
+  time (unauthenticated, ~60 requests/hour/visitor — fine at school scale,
+  not for high traffic) and lists them newest-first, derived from the
+  filename convention. No manual list to fall out of sync — adding an issue
+  is exactly the three steps above, nothing else. A file that doesn't match
+  the naming convention still appears (title falls back to the raw filename)
+  rather than silently vanishing, but sorts after every dated issue so it
+  can't misread as more recent than it is. A failed fetch (offline, rate
+  limited) degrades to a direct link into the `issues/` folder on GitHub
+  rather than a blank or broken page.
+
+This only functions once the site is actually hosted (GitHub Pages or
+similar) — `editor.html` opened via `file://` (double-click) neither needs
+nor touches any of it; that path is unchanged from §6b.
+
 ---
 
 ## 8. Staged build plan
