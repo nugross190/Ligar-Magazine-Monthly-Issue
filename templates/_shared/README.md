@@ -89,10 +89,14 @@ Three behaviors get re-wired per template; keep the same shape each time:
    can't be deleted by accident.
 
 3. **Video embed** — the video `.slot` swaps its own contents for an inline
-   `<form>` (URL input + submit) on click, extracts the 11-char YouTube ID
-   via regex, and replaces itself with an `<iframe>` embed on submit. Embed
-   only — never inline a video as base64; it bloats the single-file export
-   past what a browser will load reliably (see the layout spec, §5).
+   `<form>` (URL input + submit) on click and extracts the 11-char YouTube ID
+   via regex. The result renders as a **lite card** (thumbnail + play button
+   linking out to YouTube), not a direct `<iframe>`: YouTube rejects embeds
+   from referrer-less pages with player Error 153, and `file://` pages —
+   the double-click case this tool lives in — never send a referrer. The
+   exported reader swaps lite cards for real iframes when served over
+   http(s). Never inline a video as base64 either; it bloats the single-file
+   export past what a browser will load reliably (see the layout spec, §5).
 
 4. **Per-card PNG export** — one `.export-btn` per `.card`, added via JS
    (`document.querySelectorAll('.card').forEach(...)`) rather than hand-
