@@ -21,10 +21,20 @@ Every page is a fixed 9:16 story card (Stories/Reels proportions) navigated via 
 
 ## Status
 
-Stage 1 of the staged build plan in the spec: template registry pattern isn't
-code yet (each template is still one hand-built file), but the first batch of
-sections is functionally usable end-to-end — upload → edit → embed → export —
-matching the "COVER, TOC, PHOTO_COLLAGE" proof-of-concept goal, plus three
-more section types along for the ride, plus the §7 per-page PNG export for
-social. Not yet built: enforced blank-template protection (currently just a
-warning), editable TOC/index labels, and the page-management shell (Stage 3).
+Six of the spec's eleven templates are built and functionally usable end to end
+— upload → edit → embed → export — plus the §7 per-card PNG export for social.
+
+Against the staged plan in §8, though, the build has run out of order: what
+ships is **Stage 4** (polish — scroll navigation, PNG export, mobile-first
+cards) plus 6 templates' worth of **Stage 2**. **Stage 1 has not started.**
+Each template is still a hand-built section in one file, so the template
+registry and slot config that Stage 1 exists to deliver are not written, and
+neither is the page shell that makes the tool PowerPoint-shaped — an issue
+opening on a cover and growing by "add page → pick layout" (§1, §6a). That
+shell is now the critical path, and every hand-built template added before it
+is one more to convert afterwards.
+
+Also not built: any persistence at all — a reload loses every upload and edit,
+which §6b marks as a precondition of the deck model rather than a polish item.
+Enforced blank-template protection is still a written warning only, and the TOC
+and profile-index labels are still static rather than derived from a page list.
